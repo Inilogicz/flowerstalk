@@ -124,7 +124,7 @@ const Cart = () => {
 
               <div className="mt-6 p-4 bg-muted rounded-lg">
                 <p className="text-sm text-muted-foreground">
-                  Free delivery on orders over ₦10,000
+                  Delivery fee depends on your locatiom
                 </p>
               </div>
             </Card>

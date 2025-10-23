@@ -14,7 +14,7 @@ export const Footer = () => {
               FlowerStalk
             </h3>
             <p className="text-muted-foreground mb-4">
-              Nigeria's premier flower delivery service. Spreading joy through beautiful blooms since 2020.
+              Nigeria's premier flower delivery service. Spreading joy through beautiful blooms since 2001.
             </p>
             <div className="flex gap-3">
               <Button size="icon" variant="ghost" className="hover:bg-primary hover:text-primary-foreground">

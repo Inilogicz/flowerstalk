@@ -83,7 +83,7 @@ const Checkout = () => {
                       <div className="text-sm text-muted-foreground">Get it delivered to your doorstep</div>
                     </Label>
                     <span className="font-medium">
-                      {subtotal > 10000 ? "Free" : "₦2,000"}
+                      {subtotal > 0 && subtotal > 10000? "Free" : "₦2,000"}
                     </span>
                   </div>
                   <div className="flex items-center space-x-2 border border-border rounded-lg p-4 cursor-pointer hover:bg-muted/50">
@@ -166,7 +166,7 @@ const Checkout = () => {
                   ))}
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Delivery</span>
-                    <span>{deliveryFee === 0 ? "Free" : `₦${deliveryFee.toLocaleString()}`}</span>
+                    <span>{deliveryFee === 0 ? "3900" : `₦${deliveryFee.toLocaleString()}`}</span>
                   </div>
                   <div className="border-t border-border pt-3">
                     <div className="flex justify-between text-lg font-semibold">
