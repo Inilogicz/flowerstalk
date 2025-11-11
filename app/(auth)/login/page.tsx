@@ -122,7 +122,7 @@ export default function LoginPage() {
               </Button>
             </form>
 
-            <p className="text-center text-slate-500 text-xs mt-6 font-medium">Demo: admin@flowerst.co / Flow</p>
+           
           </div>
         </Card>
       </div>
