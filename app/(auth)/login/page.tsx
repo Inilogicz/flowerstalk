@@ -15,8 +15,8 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [formData, setFormData] = useState({
-    email: "admin@flowerst.co",
-    password: "Flow",
+    email: "",
+    password: "",
   })
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
