@@ -1,7 +1,7 @@
 // src/app/success/page.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Header from "@/components/header"; // Assuming Header is in components/header
@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button"; // Assuming shadcn/ui button
 import { CheckCircle, Home, ShoppingBag, Loader2, AlertCircle } from "lucide-react"; // Icons
 import { useCart } from "@/lib/cart-context"; // Assuming your cart context
 
-export default function SuccessPage() {
+function SuccessContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { clearCart } = useCart(); // Get clearCart function from your context
@@ -22,9 +22,8 @@ export default function SuccessPage() {
     useEffect(() => {
         // Clear the cart on page load for a successful checkout
         clearCart();
-
         // Parse query parameters
-        const id = searchParams.get("order_id") || searchParams.get("id"); // Use 'order_id' or 'id'
+        const id = searchParams.get("trxref") || searchParams.get("reference"); // Use 'trxref' or 'reference' from Paystack
         const status = searchParams.get("status"); // e.g., from a payment gateway
 
         setOrderId(id);
@@ -109,3 +108,23 @@ export default function SuccessPage() {
 // you might need to import them:
 // import { AlertCircle, Loader2 } from "lucide-react";
 // Or use similar icons you have available.
+
+export default function SuccessPage() {
+  return (
+    <Suspense fallback={<SuccessLoading />}>
+      <SuccessContent />
+    </Suspense>
+  );
+}
+
+function SuccessLoading() {
+  return (
+    <main className="flex flex-col w-full min-h-screen">
+      <Header />
+      <section className="flex-1 flex items-center justify-center p-4">
+        <Loader2 className="h-12 w-12 text-rose-600 animate-spin" />
+      </section>
+      <Footer />
+    </main>
+  );
+}
