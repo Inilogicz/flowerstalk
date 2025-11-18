@@ -1,11 +1,11 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { ChevronLeft, ChevronRight, Eye, CheckCircle, Clock, AlertCircle, ChevronDown, ChevronUp } from "lucide-react"
+import { ChevronLeft, ChevronRight, Eye, CheckCircle, Clock, AlertCircle, ChevronDown, ChevronUp, Search, Calendar } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import OrdersTableSkeleton from "@/components/admin/orders-table-skeleton"
-import OrderDetailModal from "@/components/admin/order-detail-modal"
+import OrdersTableSkeleton from "@/components/admin/orders-table-skeleton" // Assuming this exists
+import OrderDetailsModal from "@/components/admin/order-details-modal" // Corrected import
 
 const BASE_URL = "https://app.flowerstalk.org/v1"
 
@@ -14,13 +14,17 @@ interface Order {
   reference: string
   deliveryData: {
     senderName: string
+    senderPhone: string
     location: string
     receiversName: string
     receiversPhone: string
     deliveryAddress: string
   }
-  items: Array<{ quantity: number; itemId: any }>
+  items: Array<{ quantity: number; itemId: any; _id: string }>
   totalAmount: number
+  deliveryFee: number
+  tax: number
+  orderNumber: string
   status: string
   paymentStatus: string
   createdAt: string
@@ -40,9 +44,11 @@ export default function OrdersPage() {
   const [pagination, setPagination] = useState<PaginationData | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
-  const [showDetailModal, setShowDetailModal] = useState(false)
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null)
   const [token, setToken] = useState("")
+  const [filterStatus, setFilterStatus] = useState("")
+  const [searchQuery, setSearchQuery] = useState("")
+  const [dateRange, setDateRange] = useState({ from: "", to: "" })
 
   useEffect(() => {
     const storedToken = localStorage.getItem("adminToken")
@@ -50,13 +56,49 @@ export default function OrdersPage() {
   }, [])
 
   useEffect(() => {
+    // Debounce search query
+    const handler = setTimeout(() => {
+      if (token) {
+        // Reset to page 1 when search query changes
+        if (currentPage !== 1) setCurrentPage(1)
+        else fetchOrders()
+      }
+    }, 500) // 500ms delay
+
+    return () => clearTimeout(handler)
+  }, [searchQuery, token])
+
+  useEffect(() => {
     if (token) fetchOrders()
-  }, [token, currentPage])
+  }, [filterStatus, token])
+
+  useEffect(() => {
+    // Fetch when both dates are selected or both are cleared
+    if (token && ((dateRange.from && dateRange.to) || (!dateRange.from && !dateRange.to))) {
+      if (currentPage !== 1) setCurrentPage(1)
+      else fetchOrders()
+    }
+  }, [dateRange, token])
+
+  useEffect(() => {
+    // This effect should only run when currentPage changes, not on initial load with token.
+    if (token) {
+      fetchOrders()
+    }
+  }, [currentPage, token]);
 
   const fetchOrders = async () => {
     setLoading(true)
     try {
-      const response = await fetch(`${BASE_URL}/orders?page=${currentPage}&limit=10`, {
+      const url = new URL(`${BASE_URL}/orders`)
+      url.searchParams.append("page", currentPage.toString())
+      url.searchParams.append("limit", "10")
+      if (filterStatus) url.searchParams.append("status", filterStatus)
+      if (searchQuery) url.searchParams.append("search", searchQuery)
+      if (dateRange.from) url.searchParams.append("startDate", dateRange.from)
+      if (dateRange.to) url.searchParams.append("endDate", dateRange.to)
+
+      const response = await fetch(url.toString(), {
         headers: { Authorization: `Bearer ${token}` },
       })
       const data = await response.json()
@@ -109,6 +151,64 @@ export default function OrdersPage() {
         <p className="text-gray-600 text-sm sm:text-base">Manage and track all customer orders</p>
       </div>
 
+      {/* Filters and Search */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search by Order Number..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:border-rose-500/50"
+          />
+        </div>
+        <select
+          value={filterStatus}
+          onChange={(e) => setFilterStatus(e.target.value)}
+          className="w-full sm:w-auto px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:border-rose-500/50"
+        >
+          <option value="">All Statuses</option>
+          <option value="pending">Pending</option>
+          <option value="accepted">Accepted</option>
+          <option value="assigned">Assigned</option>
+          <option value="completed">Completed</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+        <div className="relative">
+          <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <input
+            type="date"
+            value={dateRange.from}
+            onChange={(e) => setDateRange((prev) => ({ ...prev, from: e.target.value }))}
+            className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:border-rose-500/50"
+            title="Start Date"
+          />
+        </div>
+        <div className="relative">
+          <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <input
+            type="date"
+            value={dateRange.to}
+            onChange={(e) => setDateRange((prev) => ({ ...prev, to: e.target.value }))}
+            min={dateRange.from}
+            disabled={!dateRange.from}
+            className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:border-rose-500/50 disabled:bg-gray-100"
+            title="End Date"
+          />
+        </div>
+      </div>
+
+      {/* No results message */}
+      {!loading && orders.length === 0 && (
+        <div className="text-center py-12 bg-white border border-gray-200 rounded-lg">
+          <h3 className="text-lg font-semibold text-gray-800">No Orders Found</h3>
+          <p className="text-gray-500 mt-2">
+            There are no orders matching your current filters. Try adjusting your search.
+          </p>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         <Card className="bg-yellow-50 border-yellow-200 p-4 sm:p-6">
           <p className="text-sm text-gray-700 mb-2">Pending Orders</p>
@@ -131,13 +231,13 @@ export default function OrdersPage() {
       </div>
 
       {/* Mobile Expandable Cards & Desktop Table */}
-      <div className="space-y-3 sm:space-y-4">
+      <div className={`space-y-3 sm:space-y-4 ${orders.length === 0 ? 'hidden' : ''}`}>
         <div className="hidden lg:block bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Reference</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Order Number</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Customer</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Location</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Amount</th>
@@ -152,7 +252,7 @@ export default function OrdersPage() {
                   return (
                     <tr key={order._id} className="hover:bg-gray-50 transition-colors duration-200">
                       <td className="px-6 py-4">
-                        <span className="font-mono text-sm font-semibold text-rose-600">{order.reference}</span>
+                        <span className="font-mono text-sm font-semibold text-rose-600">{order.orderNumber}</span>
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-sm">
@@ -173,8 +273,7 @@ export default function OrdersPage() {
                       <td className="px-6 py-4">
                         <Button
                           onClick={() => {
-                            setSelectedOrder(order)
-                            setShowDetailModal(true)
+                            setSelectedOrder(order) // This will open the modal
                           }}
                           size="sm"
                           className="bg-gray-200 hover:bg-gray-300 text-gray-700"
@@ -203,8 +302,8 @@ export default function OrdersPage() {
                 onClick={() => setExpandedOrderId(isExpanded ? null : order._id)}
               >
                 <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-mono text-sm font-semibold text-rose-600 mb-2">{order.reference}</p>
+                  <div className="flex-1 min-w-0"> 
+                    <p className="font-mono text-sm font-semibold text-rose-600 mb-2">{order.orderNumber}</p>
                     <p className="font-medium text-gray-900 truncate">{order.deliveryData.receiversName}</p>
                     <div
                       className={`flex items-center gap-2 w-fit mt-2 px-2 py-1 rounded-full text-xs font-medium ${statusColor}`}
@@ -241,8 +340,7 @@ export default function OrdersPage() {
                     <Button
                       onClick={(e) => {
                         e.stopPropagation()
-                        setSelectedOrder(order)
-                        setShowDetailModal(true)
+                        setSelectedOrder(order) // This will open the modal
                       }}
                       className="w-full bg-rose-600 hover:bg-rose-700 text-white mt-4"
                     >
@@ -256,7 +354,7 @@ export default function OrdersPage() {
         </div>
       </div>
 
-      {pagination && pagination.totalPages > 1 && (
+      {pagination && pagination.totalPages > 1 && orders.length > 0 && (
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <p className="text-gray-600 text-sm">
             Page {pagination.currentPage} of {pagination.totalPages}
@@ -280,13 +378,17 @@ export default function OrdersPage() {
         </div>
       )}
 
-      {showDetailModal && selectedOrder && (
-        <OrderDetailModal
+      {selectedOrder && (
+        <OrderDetailsModal
           order={selectedOrder}
-          onClose={() => setShowDetailModal(false)}
-          onUpdate={() => {
-            setShowDetailModal(false)
+          onClose={() => setSelectedOrder(null)}
+          onAssign={() => {
+            setSelectedOrder(null)
             fetchOrders()
+          }}
+          onUpdate={() => {
+            setSelectedOrder(null)
+            fetchOrders() // Re-fetch orders to show updated status
           }}
           token={token}
         />

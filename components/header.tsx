@@ -88,7 +88,7 @@ export default function Header() {
             <Link href="/contact" className="text-foreground hover:text-rose-600 transition">
               Contact
             </Link>
-            <Link href="/orders" className="w-full">
+            <Link href="/track" className="w-full">
               <Button className="w-full">Track Order</Button>
             </Link>
           </nav>
