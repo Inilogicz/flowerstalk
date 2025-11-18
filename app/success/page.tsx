@@ -17,25 +17,45 @@ function SuccessContent() {
 
     const [orderId, setOrderId] = useState<string | null>(null);
     const [paymentStatus, setPaymentStatus] = useState<string | null>(null); // e.g., 'success', 'failed'
+    const [apiMessage, setApiMessage] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        // Clear the cart on page load for a successful checkout
-        clearCart();
-        // Parse query parameters
-        const id = searchParams.get("trxref") || searchParams.get("reference"); // Use 'trxref' or 'reference' from Paystack
-        const status = searchParams.get("status"); // e.g., from a payment gateway
+        const reference = searchParams.get("trxref") || searchParams.get("reference");
 
-        setOrderId(id);
-        setPaymentStatus(status);
-        setIsLoading(false);
+        if (!reference) {
+            setPaymentStatus("failed");
+            setIsLoading(false);
+            return;
+        }
 
-        // Optional: You might want to make a backend call here to verify the payment
-        // with the payment gateway using the order_id/payment_intent and update
-        // the order status in your database.
-        // For this example, we'll just display what's in the URL.
+        setOrderId(reference);
 
-    }, [searchParams, clearCart]); // Dependency array includes searchParams and clearCart
+        const verifyPayment = async () => {
+            try {
+                // This endpoint checks YOUR backend for the order status,
+                // which should be updated by the Paystack webhook.
+                const response = await fetch(`https://app.flowerstalk.org/v1/orders/verify-payment/${reference}`);
+                const result = await response.json();
+
+                setApiMessage(result.message || null); // Store the message from the API
+
+                if (response.ok && result.status && result.data.paymentStatus === 'paid') {
+                    setPaymentStatus("success");
+                    clearCart(); // Clear cart only on confirmed success
+                } else {
+                    setPaymentStatus("failed");
+                }
+            } catch (error) {
+                console.error("Payment verification failed:", error);
+                setPaymentStatus("failed");
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        verifyPayment();
+    }, [searchParams, clearCart]);
 
     // You might want to show a loading state if verifying with backend
     if (isLoading) {
@@ -55,14 +75,14 @@ function SuccessContent() {
     }
 
     // Determine if it's a success or if there's an issue based on status or lack of orderId
-    const isSuccessful = paymentStatus === "success" || orderId; // Assuming if orderId exists, it's generally successful or needs less emphasis on 'failure'
+    const isSuccessful = paymentStatus === "success";
     const title = isSuccessful ? "Order Placed Successfully!" : "Payment Status Unknown";
     const description = isSuccessful
-        ? "Your payment was successful and your order has been placed. We'll send a confirmation email shortly."
-        : "We couldn't confirm your payment status. Please check your email or contact support with your payment reference.";
+        ? apiMessage || "Your payment was successful and your order has been placed. We'll send a confirmation email shortly."
+        : apiMessage || "There was an issue with your payment. If you believe this is an error, please contact support with your order reference.";
     const icon = isSuccessful
         ? <CheckCircle className="w-16 h-16 text-rose-600 mb-6" />
-        : <AlertCircle className="w-16 h-16 text-yellow-500 mb-6" />; // Assuming AlertCircle is available, or use a different icon
+        : <AlertCircle className="w-16 h-16 text-red-500 mb-6" />;
 
     return (
         <main className="flex flex-col w-full min-h-screen">
