@@ -42,7 +42,7 @@ export default function LocationModal({ location, onClose, onSave, token }: Loca
 
     try {
       const url = location ? `${BASE_URL}/locations/${location._id}` : `${BASE_URL}/locations`
-      const method = location ? "PUT" : "POST"
+      const method = location ? "PATCH" : "POST"
 
       const response = await fetch(url, {
         method,
@@ -64,12 +64,12 @@ export default function LocationModal({ location, onClose, onSave, token }: Loca
   }
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in-50 duration-300">
-      <div className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700/50 rounded-xl w-full max-w-md animate-in zoom-in-95 duration-300">
+    <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in-50 duration-300">
+      <div className="bg-white border border-slate-200 rounded-xl w-full max-w-md animate-in zoom-in-95 duration-300">
         {/* Header */}
-        <div className="bg-slate-900/50 border-b border-slate-700/50 p-6 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-slate-100">{location ? "Edit Location" : "Add Location"}</h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-200">
+        <div className="sticky top-0 bg-slate-50/80 backdrop-blur-sm border-b border-slate-200 p-6 flex items-center justify-between">
+          <h2 className="text-xl font-bold text-slate-800">{location ? "Edit Location" : "Add Location"}</h2>
+          <button onClick={onClose} className="text-slate-500 hover:text-slate-800">
             <X size={24} />
           </button>
         </div>
@@ -77,33 +77,33 @@ export default function LocationModal({ location, onClose, onSave, token }: Loca
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           <div>
-            <label className="block text-sm font-medium text-slate-200 mb-2">Location Name</label>
+            <label className="block text-sm font-medium text-slate-700 mb-2">Location Name</label>
             <input
               type="text"
               name="location"
               value={formData.location}
               onChange={handleChange}
               placeholder="e.g., Lekki, Island, Ikeja"
-              className="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500/50"
+              className="w-full px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:border-emerald-500/50"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-200 mb-2">Delivery Fee (₦)</label>
+            <label className="block text-sm font-medium text-slate-700 mb-2">Delivery Fee (₦)</label>
             <input
               type="number"
               name="amount"
               value={formData.amount}
               onChange={handleChange}
               placeholder="0"
-              className="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500/50"
+              className="w-full px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:border-emerald-500/50"
               required
             />
           </div>
 
           <div className="flex gap-3">
-            <Button type="button" onClick={onClose} className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200">
+            <Button type="button" onClick={onClose} className="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-800">
               Cancel
             </Button>
             <Button

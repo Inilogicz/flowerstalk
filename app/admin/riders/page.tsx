@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight, CheckCircle, XCircle, AlertCircle, ChevronDo
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import RidersTableSkeleton from "@/components/admin/riders-table-skeleton"
+import RiderDetailsModal from "@/components/admin/rider-details-modal"
 
 const BASE_URL = "https://app.flowerstalk.org/v1"
 
@@ -19,6 +20,8 @@ interface Rider {
   documentType: string
   documentNumber: string
   createdAt: string
+  frontImage?: string
+  backImage?: string
   updatedAt: string
 }
 
@@ -36,11 +39,11 @@ export default function RidersPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [token, setToken] = useState("")
-  const [expandedRider, setExpandedRider] = useState<string | null>(null)
+  const [selectedRider, setSelectedRider] = useState<Rider | null>(null)
 
   useEffect(() => {
     const storedToken = localStorage.getItem("adminToken")
-    if (storedToken) setToken(storedToken)
+    if (storedToken) { setToken(storedToken) }
   }, [])
 
   useEffect(() => {
@@ -82,6 +85,7 @@ export default function RidersPage() {
 
       if (response.ok) {
         fetchRiders()
+        setSelectedRider(null) // Close modal on success
       }
     } catch (error) {
       console.error("Action failed:", error)
@@ -167,7 +171,11 @@ export default function RidersPage() {
                   const StatusIcon = getStatusIcon(rider.status)
                   const statusColor = getStatusColor(rider.status)
                   return (
-                    <tr key={rider._id} className="hover:bg-gray-50 transition-colors">
+                    <tr
+                      key={rider._id}
+                      onClick={() => setSelectedRider(rider)}
+                      className="hover:bg-gray-50 transition-colors cursor-pointer"
+                    >
                       <td className="px-4 sm:px-6 py-3 sm:py-4">
                         <div className="text-sm">
                           <p className="font-medium text-gray-900">
@@ -243,15 +251,15 @@ export default function RidersPage() {
         {riders.map((rider) => {
           const StatusIcon = getStatusIcon(rider.status)
           const statusColor = getStatusColor(rider.status)
-          const isExpanded = expandedRider === rider._id
 
           return (
-            <Card key={rider._id} className="bg-white border border-gray-200 p-4">
-              <button
-                onClick={() => setExpandedRider(isExpanded ? null : rider._id)}
-                className="w-full flex items-start justify-between gap-3"
-              >
-                <div className="flex-1 text-left">
+            <Card
+              key={rider._id}
+              onClick={() => setSelectedRider(rider)}
+              className="bg-white border border-gray-200 p-4 cursor-pointer"
+            >
+              <div className="w-full flex items-start justify-between gap-3">
+                <div className="flex-1">
                   <p className="font-semibold text-gray-900 text-sm">
                     {rider.firstName} {rider.lastName}
                   </p>
@@ -269,58 +277,7 @@ export default function RidersPage() {
                     </span>
                   </div>
                 </div>
-                <ChevronDown
-                  size={18}
-                  className={`text-gray-400 transition-transform ${isExpanded ? "rotate-180" : ""}`}
-                />
-              </button>
-
-              {isExpanded && (
-                <div className="mt-4 pt-4 border-t border-gray-200 space-y-3">
-                  <div>
-                    <p className="text-xs text-gray-600 mb-1">Email</p>
-                    <p className="text-sm text-gray-900 font-medium">{rider.email}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-600 mb-1">Phone</p>
-                    <p className="text-sm text-gray-900 font-medium">{rider.phoneNumber}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-600 mb-1">Document</p>
-                    <p className="text-sm text-gray-900 font-medium">
-                      {rider.documentType} - {rider.documentNumber}
-                    </p>
-                  </div>
-                  <div className="flex gap-2 pt-2">
-                    {rider.status !== "APPROVED" ? (
-                      <>
-                        <Button
-                          onClick={() => handleApproveReject(rider._id, "APPROVED")}
-                          disabled={actionLoading === rider._id}
-                          size="sm"
-                          className="flex-1 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 text-xs"
-                        >
-                          <CheckCircle size={14} className="mr-1" />
-                          Approve
-                        </Button>
-                        <Button
-                          onClick={() => handleApproveReject(rider._id, "REJECTED")}
-                          disabled={actionLoading === rider._id}
-                          size="sm"
-                          className="flex-1 bg-red-100 hover:bg-red-200 text-red-700 text-xs"
-                        >
-                          <XCircle size={14} className="mr-1" />
-                          Reject
-                        </Button>
-                      </>
-                    ) : (
-                      <div className="w-full text-center py-2 bg-gray-50 rounded text-xs text-gray-600 font-medium">
-                        Approved
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
+              </div>
             </Card>
           )
         })}
@@ -349,6 +306,15 @@ export default function RidersPage() {
             </Button>
           </div>
         </div>
+      )}
+
+      {selectedRider && (
+        <RiderDetailsModal
+          rider={selectedRider}
+          onClose={() => setSelectedRider(null)}
+          onAction={handleApproveReject}
+          actionLoading={actionLoading === selectedRider._id}
+        />
       )}
     </div>
   )
