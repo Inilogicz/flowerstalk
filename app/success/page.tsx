@@ -22,6 +22,9 @@ function SuccessContent() {
 
     useEffect(() => {
         const reference = searchParams.get("trxref") || searchParams.get("reference");
+        
+        // Retrieve orderNumber from sessionStorage
+        const storedOrderNumber = sessionStorage.getItem('orderNumber');
 
         if (!reference) {
             setPaymentStatus("failed");
@@ -29,20 +32,21 @@ function SuccessContent() {
             return;
         }
 
-        setOrderId(reference);
+        // Use stored orderNumber, fallback to reference if not available
+        setOrderId(storedOrderNumber || reference);
 
         const verifyPayment = async () => {
             try {
-                // This endpoint checks YOUR backend for the order status,
-                // which should be updated by the Paystack webhook.
                 const response = await fetch(`https://app.flowerstalk.org/v1/orders/verify-payment/${reference}`);
                 const result = await response.json();
 
-                setApiMessage(result.message || null); // Store the message from the API
+                setApiMessage(result.message || null);
 
                 if (response.ok && result.status && result.data.paymentStatus === 'paid') {
                     setPaymentStatus("success");
-                    clearCart(); // Clear cart only on confirmed success
+                    clearCart();
+                    // Clear the stored orderNumber after success
+                    sessionStorage.removeItem('orderNumber');
                 } else {
                     setPaymentStatus("failed");
                 }
@@ -148,3 +152,17 @@ function SuccessLoading() {
     </main>
   );
 }
+
+// Note: This code should be placed in your checkout handler/component
+// where the fetch request is made, not at the top level of this module.
+// Example usage in a checkout function:
+//
+// const handleCheckout = async () => {
+//     const response = await fetch('/api/checkout', { /* ... */ });
+//     const data = await response.json();
+//
+//     if (data.status && data.order) {
+//         sessionStorage.setItem('orderNumber', data.order.orderNumber);
+//         router.push(`/success?trxref=${data.order.reference}`);
+//     }
+// };
