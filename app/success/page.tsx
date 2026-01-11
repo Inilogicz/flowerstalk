@@ -16,7 +16,7 @@ function SuccessContent() {
     const { clearCart } = useCart(); // Get clearCart function from your context
 
     const [orderId, setOrderId] = useState<string | null>(null);
-    const [paymentStatus, setPaymentStatus] = useState<string | null>(null); // e.g., 'success', 'failed'
+    const [paymentStatus, setPaymentStatus] = useState<"success" | "failed" | "pending">("pending");
     const [apiMessage, setApiMessage] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -42,11 +42,15 @@ function SuccessContent() {
 
                 setApiMessage(result.message || null);
 
-                if (response.ok && result.status && result.data.paymentStatus === 'paid') {
-                    setPaymentStatus("success");
-                    clearCart();
-                    // Clear the stored orderNumber after success
-                    sessionStorage.removeItem('orderNumber');
+                if (response.ok && result.status) {
+                    if (result.data.paymentStatus === 'paid') {
+                        setPaymentStatus("success");
+                        clearCart();
+                        // Clear the stored orderNumber after success
+                        sessionStorage.removeItem('orderNumber');
+                    } else {
+                        setPaymentStatus("pending");
+                    }
                 } else {
                     setPaymentStatus("failed");
                 }
@@ -79,14 +83,23 @@ function SuccessContent() {
     }
 
     // Determine if it's a success or if there's an issue based on status or lack of orderId
-    const isSuccessful = paymentStatus === "success";
-    const title = isSuccessful ? "Order Placed Successfully!" : "Payment Status Unknown";
-    const description = isSuccessful
-        ? apiMessage || "Your payment was successful and your order has been placed. We'll send a confirmation email shortly."
-        : apiMessage || "There was an issue with your payment. If you believe this is an error, please contact support with your order reference.";
-    const icon = isSuccessful
-        ? <CheckCircle className="w-16 h-16 text-rose-600 mb-6" />
-        : <AlertCircle className="w-16 h-16 text-red-500 mb-6" />;
+    let title = "Payment Status Unknown";
+    let description = "We could not verify the status of your payment.";
+    let icon = <AlertCircle className="w-16 h-16 text-yellow-500 mb-6" />;
+
+    if (paymentStatus === "success") {
+        title = "Order Placed Successfully!";
+        description = apiMessage || "Your payment was successful and your order has been placed. We'll send a confirmation email shortly.";
+        icon = <CheckCircle className="w-16 h-16 text-rose-600 mb-6" />;
+    } else if (paymentStatus === "pending") {
+        title = "Payment Processing";
+        description = "We have received your order, but the payment confirmation is still pending. Please check your email for updates.";
+        icon = <Loader2 className="w-16 h-16 text-blue-500 mb-6 animate-spin" />;
+    } else {
+        title = "Payment Failed or Not Verified";
+        description = apiMessage || "There was an issue verifying your payment. If you were debited, please contact support.";
+        icon = <AlertCircle className="w-16 h-16 text-red-500 mb-6" />;
+    }
 
     return (
         <main className="flex flex-col w-full min-h-screen">
@@ -95,7 +108,7 @@ function SuccessContent() {
             <section className="flex-1 flex items-center justify-center bg-background py-16 px-4 sm:px-6 lg:px-8">
                 <div className="max-w-md mx-auto text-center bg-card border border-border rounded-2xl p-8 shadow-lg">
                     {icon}
-                    <h1 className="text-3xl font-bold text-foreground mb-4">{title}</h1>
+                    <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-4">{title}</h1>
                     <p className="text-lg text-muted-foreground mb-6">
                         {description}
                     </p>
@@ -152,4 +165,3 @@ function SuccessLoading() {
     </main>
   );
 }
-

@@ -7,8 +7,7 @@ import Link from "next/link"
 import Header from "@/components/header"
 import Footer from "@/components/footer"
 import { Button } from "@/components/ui/button"
-import { Search, Package, Truck, MapPin, CheckCircle } from "lucide-react"
-import { getOrderByTrackingId } from "@/lib/orders"
+import { Search, Package, Truck, MapPin, CheckCircle, Loader2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
 const getStatusIcon = (status: string) => {
@@ -87,9 +86,10 @@ export default function TrackOrder() {
   const [order, setOrder] = useState<any>(null)
   const [searched, setSearched] = useState(false)
   const [showDetails, setShowDetails] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
 
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!trackingId.trim()) {
       toast({
@@ -99,18 +99,71 @@ export default function TrackOrder() {
       return
     }
 
-    const foundOrder = getOrderByTrackingId(trackingId.toUpperCase())
-    if (foundOrder) {
-      setOrder(foundOrder)
-      setSearched(true)
-    } else {
+    setIsLoading(true)
+    setSearched(true)
+    setOrder(null)
+    setShowDetails(false)
+
+    try {
+      const response = await fetch(`https://app.flowerstalk.org/v1/orders/order-number/${trackingId.trim()}`)
+      const result = await response.json()
+
+      if (result.status && result.data) {
+        const apiData = result.data
+        const isPickup = apiData.deliveryType === "pickup"
+        const contactData = isPickup ? apiData.pickupData : apiData.deliveryData
+        
+        // Helper to extract names safely
+        const fullName = contactData?.fullname || contactData?.senderName || "Guest User"
+        const nameParts = fullName.split(" ")
+        const firstName = nameParts[0]
+        const lastName = nameParts.slice(1).join(" ") || ""
+
+        // Map API response to UI state structure
+        const mappedOrder = {
+          trackingId: apiData.orderNumber,
+          status: apiData.status === "pending" ? "processing" : apiData.status, // Map pending to processing for UI visibility
+          createdAt: apiData.createdAt,
+          personalInfo: {
+            firstName,
+            lastName,
+            email: contactData?.email || contactData?.senderEmail || "N/A",
+            phone: contactData?.phone || contactData?.senderPhone || "N/A",
+          },
+          paymentStatus: apiData.paymentStatus || "pending",
+          items: (apiData.items || []).map((item: any) => ({
+            id: item.itemId,
+            name: item.name || "Flower/Gift Item", // Fallback if API doesn't populate name
+            quantity: item.quantity,
+            price: item.price || 0, // Fallback if API doesn't populate price
+          })),
+          deliveryMethod: isPickup ? "pickup" : "door-delivery",
+          deliveryDetails: !isPickup ? {
+            address: contactData?.deliveryAddress || contactData?.address || "",
+            city: contactData?.location || "",
+            state: "Lagos", // Default or extract if available
+            zipCode: "",
+            notes: contactData?.note || ""
+          } : undefined,
+          pickupDetails: isPickup ? {
+            notes: contactData?.note || ""
+          } : undefined,
+          subtotal: (apiData.totalAmount || 0) - (apiData.tax || 0) - (apiData.deliveryFee || 0),
+          tax: apiData.tax || 0,
+          deliveryFee: apiData.deliveryFee || 0,
+          total: apiData.totalAmount || 0
+        }
+
+        setOrder(mappedOrder)
+      } else {
+        // API returned success: false or no data
+        setOrder(null)
+      }
+    } catch (error) {
+      console.error("Error fetching order:", error)
       setOrder(null)
-      setSearched(true)
-      toast({
-        title: "Order not found",
-        description: "Please check your tracking ID and try again.",
-        variant: "destructive",
-      })
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -139,9 +192,9 @@ export default function TrackOrder() {
                 onChange={(e) => setTrackingId(e.target.value.toUpperCase())}
                 className="flex-1 px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-rose-600"
               />
-              <Button type="submit" className="bg-rose-600 hover:bg-rose-700 text-white flex items-center gap-2">
-                <Search className="w-5 h-5" />
-                Track
+              <Button type="submit" disabled={isLoading} className="bg-rose-600 hover:bg-rose-700 text-white flex items-center gap-2 min-w-[100px]">
+                {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Search className="w-5 h-5" />}
+                {isLoading ? "Searching" : "Track"}
               </Button>
             </div>
             <p className="text-xs text-muted-foreground mt-2">
@@ -150,7 +203,7 @@ export default function TrackOrder() {
           </form>
 
           {/* Order Found */}
-          {searched && order && (
+          {searched && !isLoading && order && (
             <div className="space-y-8">
               <div className="bg-card border border-border rounded-2xl p-8">
                 <h2 className="text-xl font-bold text-foreground mb-8">Order Tracking</h2>
@@ -247,6 +300,16 @@ export default function TrackOrder() {
                       <div>
                         <p className="text-sm text-muted-foreground mb-1">Phone</p>
                         <p className="font-semibold text-foreground">{order.personalInfo.phone}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-1">Payment Status</p>
+                        <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          order.paymentStatus === 'paid' 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {order.paymentStatus === 'paid' ? 'Paid' : 'Pending'}
+                        </div>
                       </div>
                     </div>
 
@@ -366,7 +429,7 @@ export default function TrackOrder() {
           )}
 
           {/* Not Found Message */}
-          {searched && !order && (
+          {searched && !isLoading && !order && (
             <div className="bg-card border border-border rounded-2xl p-8 text-center">
               <div className="flex justify-center mb-4">
                 <div className="bg-red-100 rounded-full p-4">
