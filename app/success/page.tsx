@@ -153,16 +153,3 @@ function SuccessLoading() {
   );
 }
 
-// Note: This code should be placed in your checkout handler/component
-// where the fetch request is made, not at the top level of this module.
-// Example usage in a checkout function:
-//
-// const handleCheckout = async () => {
-//     const response = await fetch('/api/checkout', { /* ... */ });
-//     const data = await response.json();
-//
-//     if (data.status && data.order) {
-//         sessionStorage.setItem('orderNumber', data.order.orderNumber);
-//         router.push(`/success?trxref=${data.order.reference}`);
-//     }
-// };

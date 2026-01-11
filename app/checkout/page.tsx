@@ -12,9 +12,7 @@ import { useToast } from "@/hooks/use-toast"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { Location, LocationsApiResponse } from "./types" // Assuming types are correctly defined
 
-/**
- * Helper function to validate email format
- */
+
 const isValidEmail = (email: string) => /\S+@\S+\.\S+/.test(email);
 
 const USER_DETAILS_STORAGE_KEY = "flowerstalk_checkout_user_details";
@@ -230,6 +228,9 @@ export default function Checkout() {
   
       if (result.paymentLink) {
         // Successful order creation, redirect to payment
+        if (result.order && result.order.orderNumber) {
+          sessionStorage.setItem("orderNumber", result.order.orderNumber)
+        }
         window.location.href = result.paymentLink // Redirect to Paystack
       } else {
         throw new Error("Payment link not received in API response.")
