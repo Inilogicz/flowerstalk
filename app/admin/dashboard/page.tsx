@@ -48,6 +48,12 @@ interface RecentOrder {
   }
   pickupData?: {
     fullname: string
+    phone: string
+    email: string
+    pickupName: string
+    pickupPhone: string
+    pickupAddress: string
+    note?: string
   }
   status: string
   totalAmount: number
