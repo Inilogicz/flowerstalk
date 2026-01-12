@@ -39,12 +39,15 @@ interface Item {
 interface RecentOrder {
   _id: string
   orderNumber: string
-  deliveryData: {
+  deliveryData?: {
     senderName: string
     receiversName: string
     senderPhone: string
     receiversPhone: string
     deliveryAddress: string
+  }
+  pickupData?: {
+    fullname: string
   }
   status: string
   totalAmount: number
@@ -232,7 +235,9 @@ export default function DashboardPage() {
             >
               <div className="min-w-0">
                 <p className="font-mono text-sm font-semibold text-rose-600 mb-1">{order.orderNumber}</p>
-                <p className="text-sm text-gray-700">{order.deliveryData.senderName}</p>
+                <p className="text-sm text-gray-700">
+                  {order.deliveryData?.senderName || order.pickupData?.fullname || "Guest User"}
+                </p>
               </div>
               <div className="flex items-center gap-3 flex-shrink-0">
                 <span

@@ -7,20 +7,18 @@ import Link from "next/link"
 import Header from "@/components/header"
 import Footer from "@/components/footer"
 import { Button } from "@/components/ui/button"
-import { Search, Package, Truck, MapPin, CheckCircle, Loader2 } from "lucide-react"
+import { Search, Package, Truck, MapPin, CheckCircle, Loader2, Copy } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
 const getStatusIcon = (status: string) => {
   switch (status) {
-    case "confirmed":
-    case "processing":
+    case "pending":
+      return <CheckCircle className="w-6 h-6" />
+    case "accepted":
       return <Package className="w-6 h-6" />
-    case "dispatched":
-    case "with-rider":
+    case "assigned":
       return <Truck className="w-6 h-6" />
-    case "available-for-pickup":
-      return <MapPin className="w-6 h-6" />
-    case "delivered":
+    case "completed":
       return <CheckCircle className="w-6 h-6" />
     default:
       return <Package className="w-6 h-6" />
@@ -29,15 +27,13 @@ const getStatusIcon = (status: string) => {
 
 const getStatusColor = (status: string) => {
   switch (status) {
-    case "confirmed":
-    case "processing":
+    case "pending":
       return "bg-blue-100 text-blue-700"
-    case "dispatched":
-    case "with-rider":
-      return "bg-orange-100 text-orange-700"
-    case "available-for-pickup":
+    case "accepted":
       return "bg-purple-100 text-purple-700"
-    case "delivered":
+    case "assigned":
+      return "bg-orange-100 text-orange-700"
+    case "completed":
       return "bg-green-100 text-green-700"
     default:
       return "bg-gray-100 text-gray-700"
@@ -46,38 +42,53 @@ const getStatusColor = (status: string) => {
 
 const getStatusLabel = (status: string) => {
   switch (status) {
-    case "confirmed":
-      return "Order Confirmed"
-    case "processing":
+    case "pending":
+      return "Order Placed"
+    case "accepted":
       return "Processing"
-    case "dispatched":
-      return "Dispatched"
-    case "with-rider":
-      return "With Rider"
-    case "available-for-pickup":
-      return "Available for Pickup"
-    case "delivered":
-      return "Delivered"
+    case "assigned":
+      return "Out for Delivery"
+    case "completed":
+      return "Completed"
     default:
       return "Unknown"
   }
 }
 
-const getStatusSteps = (currentStatus: string) => {
-  const steps = [
-    { status: "confirmed", label: "Order Received", icon: CheckCircle },
-    { status: "processing", label: "Processing", icon: Package },
-    { status: "dispatched", label: "Dispatched", icon: Truck },
-    { status: "with-rider", label: "With Rider", icon: Truck },
-    { status: "available-for-pickup", label: "Ready for Pickup", icon: MapPin },
-    { status: "delivered", label: "Delivered", icon: CheckCircle },
-  ]
+const getStatusSteps = (currentStatus: string, deliveryMethod: string) => {
+  const isPickup = deliveryMethod === "pickup"
+  
+  // Map statuses to numeric levels for progress tracking
+  const statusLevels: Record<string, number> = {
+    pending: 0,
+    accepted: 1,
+    assigned: 2,
+    completed: 3
+  }
 
-  const currentIndex = steps.findIndex((s) => s.status === currentStatus)
+  const currentLevel = statusLevels[currentStatus] ?? 0
+
+  let steps = []
+
+  if (isPickup) {
+    steps = [
+      { status: "pending", label: "Order Placed", icon: CheckCircle },
+      { status: "accepted", label: "Processing", icon: Package },
+      { status: "completed", label: "Picked Up", icon: CheckCircle },
+    ]
+  } else {
+    steps = [
+      { status: "pending", label: "Order Placed", icon: CheckCircle },
+      { status: "accepted", label: "Processing", icon: Package },
+      { status: "assigned", label: "Out for Delivery", icon: Truck },
+      { status: "completed", label: "Delivered", icon: CheckCircle },
+    ]
+  }
+
   return steps.map((step, index) => ({
     ...step,
-    isCompleted: index <= currentIndex,
-    isActive: index === currentIndex,
+    isCompleted: currentLevel >= (statusLevels[step.status] ?? -1),
+    isActive: currentStatus === step.status,
   }))
 }
 
@@ -119,10 +130,14 @@ export default function TrackOrder() {
         const firstName = nameParts[0]
         const lastName = nameParts.slice(1).join(" ") || ""
 
+        // Normalize payment status
+        const rawPaymentStatus = apiData.paymentStatus || "pending"
+        const paymentStatus = (rawPaymentStatus === "paid" || rawPaymentStatus === "completed") ? "paid" : "pending"
+
         // Map API response to UI state structure
         const mappedOrder = {
           trackingId: apiData.orderNumber,
-          status: apiData.status === "pending" ? "processing" : apiData.status, // Map pending to processing for UI visibility
+          status: apiData.status,
           createdAt: apiData.createdAt,
           personalInfo: {
             firstName,
@@ -130,7 +145,7 @@ export default function TrackOrder() {
             email: contactData?.email || contactData?.senderEmail || "N/A",
             phone: contactData?.phone || contactData?.senderPhone || "N/A",
           },
-          paymentStatus: apiData.paymentStatus || "pending",
+          paymentStatus,
           items: (apiData.items || []).map((item: any) => ({
             id: item.itemId,
             name: item.name || "Flower/Gift Item", // Fallback if API doesn't populate name
@@ -164,6 +179,15 @@ export default function TrackOrder() {
       setOrder(null)
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handleCopyTrackingId = () => {
+    if (order?.trackingId) {
+      navigator.clipboard.writeText(order.trackingId)
+      toast({
+        description: "Tracking ID copied to clipboard",
+      })
     }
   }
 
@@ -210,7 +234,7 @@ export default function TrackOrder() {
 
                 {/* Timeline Steps */}
                 <div className="space-y-6">
-                  {getStatusSteps(order.status).map((step, index) => {
+                  {getStatusSteps(order.status, order.deliveryMethod).map((step, index) => {
                     const Icon = step.icon
                     return (
                       <div key={step.status} className="flex gap-4">
@@ -253,7 +277,12 @@ export default function TrackOrder() {
                 <div className="flex items-center justify-between mb-6">
                   <div>
                     <p className="text-sm text-muted-foreground mb-2">Tracking ID</p>
-                    <p className="text-2xl font-bold text-foreground font-mono">{order.trackingId}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-2xl font-bold text-foreground font-mono">{order.trackingId}</p>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={handleCopyTrackingId}>
+                        <Copy className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
                   <div
                     className={`flex items-center justify-center w-16 h-16 rounded-full ${getStatusColor(order.status)}`}

@@ -12,13 +12,22 @@ const BASE_URL = "https://app.flowerstalk.org/v1"
 interface Order {
   _id: string
   reference: string
-  deliveryData: {
+  deliveryData?: {
     senderName: string
     senderPhone: string
     location: string
     receiversName: string
     receiversPhone: string
     deliveryAddress: string
+  }
+  pickupData?: {
+    fullname: string
+    phone: string
+    email: string
+    pickupName: string
+    pickupPhone: string
+    pickupAddress: string
+    note?: string
   }
   items: Array<{ quantity: number; itemId: any; _id: string }>
   totalAmount: number
@@ -256,11 +265,15 @@ export default function OrdersPage() {
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-sm">
-                          <p className="font-medium text-gray-900">{order.deliveryData.receiversName}</p>
-                          <p className="text-gray-600">{order.deliveryData.receiversPhone}</p>
+                          <p className="font-medium text-gray-900">
+                            {order.deliveryData?.receiversName || order.pickupData?.pickupName || order.pickupData?.fullname || "N/A"}
+                          </p>
+                          <p className="text-gray-600">
+                            {order.deliveryData?.receiversPhone || order.pickupData?.pickupPhone || order.pickupData?.phone || "N/A"}
+                          </p>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-gray-700 text-sm">{order.deliveryData.location}</td>
+                      <td className="px-6 py-4 text-gray-700 text-sm">{order.deliveryData?.location || "Store Pickup"}</td>
                       <td className="px-6 py-4 font-semibold text-gray-900">₦{order.totalAmount.toLocaleString()}</td>
                       <td className="px-6 py-4">
                         <div
@@ -304,7 +317,9 @@ export default function OrdersPage() {
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0"> 
                     <p className="font-mono text-sm font-semibold text-rose-600 mb-2">{order.orderNumber}</p>
-                    <p className="font-medium text-gray-900 truncate">{order.deliveryData.receiversName}</p>
+                    <p className="font-medium text-gray-900 truncate">
+                      {order.deliveryData?.receiversName || order.pickupData?.pickupName || order.pickupData?.fullname || "N/A"}
+                    </p>
                     <div
                       className={`flex items-center gap-2 w-fit mt-2 px-2 py-1 rounded-full text-xs font-medium ${statusColor}`}
                     >
@@ -323,15 +338,15 @@ export default function OrdersPage() {
                   <div className="mt-4 pt-4 border-t border-gray-200 space-y-3">
                     <div>
                       <p className="text-xs text-gray-600 font-medium">Phone</p>
-                      <p className="text-sm text-gray-900">{order.deliveryData.receiversPhone}</p>
+                      <p className="text-sm text-gray-900">{order.deliveryData?.receiversPhone || order.pickupData?.pickupPhone || order.pickupData?.phone || "N/A"}</p>
                     </div>
                     <div>
                       <p className="text-xs text-gray-600 font-medium">Location</p>
-                      <p className="text-sm text-gray-900">{order.deliveryData.location}</p>
+                      <p className="text-sm text-gray-900">{order.deliveryData?.location || "Store Pickup"}</p>
                     </div>
                     <div>
                       <p className="text-xs text-gray-600 font-medium">Delivery Address</p>
-                      <p className="text-sm text-gray-900">{order.deliveryData.deliveryAddress}</p>
+                      <p className="text-sm text-gray-900">{order.deliveryData?.deliveryAddress || order.pickupData?.pickupAddress || "Store Pickup"}</p>
                     </div>
                     <div>
                       <p className="text-xs text-gray-600 font-medium">Amount</p>

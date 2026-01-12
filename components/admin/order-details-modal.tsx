@@ -32,12 +32,21 @@ interface Rider {
 interface Order {
     _id: string;
     orderNumber: string;
-    deliveryData: {
+    deliveryData?: {
         senderName: string;
         receiversName: string;
         senderPhone: string;
         receiversPhone: string;
         deliveryAddress: string;
+    };
+    pickupData?: {
+        fullname: string;
+        phone: string;
+        email: string;
+        pickupName: string;
+        pickupPhone: string;
+        pickupAddress: string;
+        note?: string;
     };
     status: string;
     totalAmount: number;
@@ -230,15 +239,27 @@ export default function OrderDetailsModal({ order, onClose, onAssign, token, onU
                                 </span>
                             }
                         />
-                        <DetailItem label="Customer" value={order.deliveryData.senderName} />
+                        <DetailItem label="Customer" value={order.deliveryData?.senderName || order.pickupData?.fullname || "N/A"} />
                     </div>
 
                     {/* Receiver & Address */}
                     <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 space-y-3">
-                        <h3 className="text-sm font-semibold text-slate-800">Recipient Information</h3>
-                        <DetailItem label="Name" value={order.deliveryData.receiversName} />
-                        <DetailItem label="Phone" value={order.deliveryData.receiversPhone} />
-                        <DetailItem label="Delivery Address" value={order.deliveryData.deliveryAddress} />
+                        <h3 className="text-sm font-semibold text-slate-800">
+                            {order.deliveryData ? "Recipient Information" : "Pickup Information"}
+                        </h3>
+                        {order.deliveryData ? (
+                            <>
+                                <DetailItem label="Name" value={order.deliveryData.receiversName} />
+                                <DetailItem label="Phone" value={order.deliveryData.receiversPhone} />
+                                <DetailItem label="Delivery Address" value={order.deliveryData.deliveryAddress} />
+                            </>
+                        ) : (
+                            <>
+                                <DetailItem label="Pickup Name" value={order.pickupData?.pickupName || order.pickupData?.fullname || "N/A"} />
+                                <DetailItem label="Phone" value={order.pickupData?.pickupPhone || order.pickupData?.phone || "N/A"} />
+                                <DetailItem label="Pickup Address" value={order.pickupData?.pickupAddress || "Store Pickup"} />
+                            </>
+                        )}
                     </div>
 
                     {/* Riders Details - Always show if assigned */}

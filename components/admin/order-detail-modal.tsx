@@ -93,24 +93,49 @@ export default function OrderDetailModal({ order, onClose, onUpdate, token }: Or
 
           {/* Delivery Information */}
           <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-3">
-            <h3 className="font-bold text-gray-900 text-sm sm:text-base">Delivery Information</h3>
+            <h3 className="font-bold text-gray-900 text-sm sm:text-base">
+              {order.deliveryType === "pickup" ? "Pickup Information" : "Delivery Information"}
+            </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-sm">
-              <div>
-                <p className="text-gray-600 text-xs">Recipient</p>
-                <p className="text-gray-900 font-medium">{order.deliveryData.receiversName}</p>
-              </div>
-              <div>
-                <p className="text-gray-600 text-xs">Phone</p>
-                <p className="text-gray-900 font-medium">{order.deliveryData.receiversPhone}</p>
-              </div>
-              <div>
-                <p className="text-gray-600 text-xs">Location</p>
-                <p className="text-gray-900 font-medium">{order.deliveryData.location}</p>
-              </div>
-              <div>
-                <p className="text-gray-600 text-xs">Address</p>
-                <p className="text-gray-900 font-medium">{order.deliveryData.deliveryAddress}</p>
-              </div>
+              {order.deliveryType === "pickup" ? (
+                <>
+                  <div>
+                    <p className="text-gray-600 text-xs">Pickup Name</p>
+                    <p className="text-gray-900 font-medium">
+                      {order.pickupData?.pickupName || order.pickupData?.fullname || "N/A"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-gray-600 text-xs">Phone</p>
+                    <p className="text-gray-900 font-medium">
+                      {order.pickupData?.pickupPhone || order.pickupData?.phone || "N/A"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-gray-600 text-xs">Address</p>
+                    <p className="text-gray-900 font-medium">{order.pickupData?.pickupAddress || "Store Pickup"}</p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div>
+                    <p className="text-gray-600 text-xs">Recipient</p>
+                    <p className="text-gray-900 font-medium">{order.deliveryData?.receiversName || "N/A"}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-600 text-xs">Phone</p>
+                    <p className="text-gray-900 font-medium">{order.deliveryData?.receiversPhone || "N/A"}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-600 text-xs">Location</p>
+                    <p className="text-gray-900 font-medium">{order.deliveryData?.location || "N/A"}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-600 text-xs">Address</p>
+                    <p className="text-gray-900 font-medium">{order.deliveryData?.deliveryAddress || "N/A"}</p>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
