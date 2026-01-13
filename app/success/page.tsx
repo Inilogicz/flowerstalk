@@ -2,134 +2,96 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import Header from "@/components/header"; // Assuming Header is in components/header
-import Footer from "@/components/footer"; // Assuming Footer is in components/footer
-import { Button } from "@/components/ui/button"; // Assuming shadcn/ui button
-import { CheckCircle, Home, ShoppingBag, Loader2, AlertCircle } from "lucide-react"; // Icons
-import { useCart } from "@/lib/cart-context"; // Assuming your cart context
+import Header from "@/components/header";
+import Footer from "@/components/footer";
+import { Button } from "@/components/ui/button";
+import { CheckCircle, Home, ShoppingBag, Loader2, Copy, Check } from "lucide-react";
+import { useCart } from "@/lib/cart-context";
 
 function SuccessContent() {
-    const router = useRouter();
     const searchParams = useSearchParams();
-    const { clearCart } = useCart(); // Get clearCart function from your context
+    const { clearCart } = useCart();
 
     const [orderId, setOrderId] = useState<string | null>(null);
-    const [paymentStatus, setPaymentStatus] = useState<"success" | "failed" | "pending">("pending");
-    const [apiMessage, setApiMessage] = useState<string | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
+    const [copied, setCopied] = useState(false);
 
     useEffect(() => {
+        // 1. Try to get order number from Session Storage (set during checkout)
+        const storedOrderNumber = sessionStorage.getItem('orderNumber');
+        
+        // 2. Fallback to URL reference if session storage is empty
         const reference = searchParams.get("trxref") || searchParams.get("reference");
         
-        // Retrieve orderNumber from sessionStorage
-        const storedOrderNumber = sessionStorage.getItem('orderNumber');
+        const finalId = storedOrderNumber || reference;
+        setOrderId(finalId);
 
-        if (!reference) {
-            setPaymentStatus("failed");
-            setIsLoading(false);
-            return;
+        // Clear cart and storage now that order is complete
+        clearCart();
+        if (storedOrderNumber) {
+            sessionStorage.removeItem('orderNumber');
         }
-
-        // Use stored orderNumber, fallback to reference if not available
-        setOrderId(storedOrderNumber || reference);
-
-        const verifyPayment = async () => {
-            try {
-                const response = await fetch(`https://app.flowerstalk.org/v1/orders/verify-payment/${reference}`);
-                const result = await response.json();
-
-                setApiMessage(result.message || null);
-
-                if (response.ok && result.status) {
-                    if (result.data.paymentStatus === 'paid') {
-                        setPaymentStatus("success");
-                        clearCart();
-                        // Clear the stored orderNumber after success
-                        sessionStorage.removeItem('orderNumber');
-                    } else {
-                        setPaymentStatus("pending");
-                    }
-                } else {
-                    setPaymentStatus("failed");
-                }
-            } catch (error) {
-                console.error("Payment verification failed:", error);
-                setPaymentStatus("failed");
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        verifyPayment();
     }, [searchParams, clearCart]);
 
-    // You might want to show a loading state if verifying with backend
-    if (isLoading) {
-        return (
-            <main className="flex flex-col w-full min-h-screen">
-                <Header />
-                <section className="flex-1 flex items-center justify-center p-4">
-                    <div className="text-center">
-                        <Loader2 className="h-12 w-12 text-rose-600 animate-spin mx-auto mb-4" />
-                        <h1 className="text-2xl font-bold text-foreground">Processing your order...</h1>
-                        <p className="text-muted-foreground mt-2">Please wait while we confirm your payment.</p>
-                    </div>
-                </section>
-                <Footer />
-            </main>
-        );
-    }
-
-    // Determine if it's a success or if there's an issue based on status or lack of orderId
-    let title = "Payment Status Unknown";
-    let description = "We could not verify the status of your payment.";
-    let icon = <AlertCircle className="w-16 h-16 text-yellow-500 mb-6" />;
-
-    if (paymentStatus === "success") {
-        title = "Order Placed Successfully!";
-        description = apiMessage || "Your payment was successful and your order has been placed. We'll send a confirmation email shortly.";
-        icon = <CheckCircle className="w-16 h-16 text-rose-600 mb-6" />;
-    } else if (paymentStatus === "pending") {
-        title = "Payment Processing";
-        description = "We have received your order, but the payment confirmation is still pending. Please check your email for updates.";
-        icon = <Loader2 className="w-16 h-16 text-blue-500 mb-6 animate-spin" />;
-    } else {
-        title = "Payment Failed or Not Verified";
-        description = apiMessage || "There was an issue verifying your payment. If you were debited, please contact support.";
-        icon = <AlertCircle className="w-16 h-16 text-red-500 mb-6" />;
-    }
+    const handleCopy = () => {
+        if (orderId) {
+            navigator.clipboard.writeText(orderId);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000); // Reset icon after 2s
+        }
+    };
 
     return (
         <main className="flex flex-col w-full min-h-screen">
             <Header />
 
             <section className="flex-1 flex items-center justify-center bg-background py-16 px-4 sm:px-6 lg:px-8">
-                <div className="max-w-md mx-auto text-center bg-card border border-border rounded-2xl p-8 shadow-lg">
-                    {icon}
-                    <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-4">{title}</h1>
-                    <p className="text-lg text-muted-foreground mb-6">
-                        {description}
+                <div className="max-w-md w-full text-center bg-card border border-border rounded-2xl p-8 shadow-lg">
+                    <CheckCircle className="w-16 h-16 text-rose-600 mx-auto mb-6" />
+                    
+                    <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-4">
+                        Order Placed Successfully!
+                    </h1>
+                    
+                    <p className="text-lg text-muted-foreground mb-8">
+                        Thank you for your purchase. Your payment was successful and your order is being processed.
                     </p>
 
                     {orderId && (
-                        <div className="bg-secondary/50 rounded-lg p-4 mb-8">
-                            <p className="text-sm text-muted-foreground">Your Order ID:</p>
-                            <p className="text-xl font-semibold text-foreground break-all">{orderId}</p>
+                        <div className="bg-secondary/50 rounded-xl p-5 mb-8 border border-dashed border-muted-foreground/30 relative group">
+                            <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2 font-semibold">
+                                Your Order ID
+                            </p>
+                            <div className="flex items-center justify-center gap-3">
+                                <code className="text-xl font-mono font-bold text-foreground break-all">
+                                    {orderId}
+                                </code>
+                                <button 
+                                    onClick={handleCopy}
+                                    className="p-2 hover:bg-background rounded-md transition-colors text-rose-600"
+                                    title="Copy Order ID"
+                                >
+                                    {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
+                                </button>
+                            </div>
+                            {copied && (
+                                <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-xs text-rose-600 font-medium">
+                                    Copied to clipboard!
+                                </span>
+                            )}
                         </div>
                     )}
 
-                    <div className="flex flex-col gap-4">
-                        <Button asChild className="w-full bg-rose-600 hover:bg-rose-700 text-white">
+                    <div className="flex flex-col gap-4 mt-4">
+                        <Button asChild className="w-full bg-rose-600 hover:bg-rose-700 text-white py-6">
                             <Link href="/">
                                 <Home className="w-4 h-4 mr-2" /> Continue Shopping
                             </Link>
                         </Button>
-                        <Button asChild variant="outline" className="w-full border-rose-600 text-rose-600 hover:bg-rose-50">
-                            {/* This link should ideally go to a user's order history page */}
+                        <Button asChild variant="outline" className="w-full border-rose-600 text-rose-600 hover:bg-rose-50 py-6">
                             <Link href="/track">
-                                <ShoppingBag className="w-4 h-4 mr-2" /> Track Your Orders
+                                <ShoppingBag className="w-4 h-4 mr-2" /> Track Your Order
                             </Link>
                         </Button>
                     </div>
@@ -141,27 +103,22 @@ function SuccessContent() {
     );
 }
 
-// Note: If AlertCircle and Loader2 are not available from lucide-react,
-// you might need to import them:
-// import { AlertCircle, Loader2 } from "lucide-react";
-// Or use similar icons you have available.
-
 export default function SuccessPage() {
-  return (
-    <Suspense fallback={<SuccessLoading />}>
-      <SuccessContent />
-    </Suspense>
-  );
+    return (
+        <Suspense fallback={<SuccessLoading />}>
+            <SuccessContent />
+        </Suspense>
+    );
 }
 
 function SuccessLoading() {
-  return (
-    <main className="flex flex-col w-full min-h-screen">
-      <Header />
-      <section className="flex-1 flex items-center justify-center p-4">
-        <Loader2 className="h-12 w-12 text-rose-600 animate-spin" />
-      </section>
-      <Footer />
-    </main>
-  );
+    return (
+        <main className="flex flex-col w-full min-h-screen">
+            <Header />
+            <section className="flex-1 flex items-center justify-center p-4">
+                <Loader2 className="h-12 w-12 text-rose-600 animate-spin" />
+            </section>
+            <Footer />
+        </main>
+    );
 }

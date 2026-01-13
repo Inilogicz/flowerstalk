@@ -4,7 +4,7 @@ import { useState } from "react"
 import { X, Loader2, Truck } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
-const BASE_URL = "https://app.flowerstalk.org/v1"
+const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000";
 
 interface OrderDetailModalProps {
   order: any

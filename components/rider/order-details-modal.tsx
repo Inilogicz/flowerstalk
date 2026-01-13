@@ -6,8 +6,7 @@ import { X, Loader2, Bike, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
-const BASE_URL = "https://app.flowerstalk.org/v1";
-
+const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000";
 interface Item {
     itemId: {
         _id: string;
