@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Loader2, Lock, Mail } from "lucide-react"
 
-const BASE_URL = "https://app.flowerstalk.org/v1"
+const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
 
 export default function LoginPage() {
   const router = useRouter()

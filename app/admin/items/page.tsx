@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card"
 import ItemsTableSkeleton from "@/components/admin/items-table-skeleton"
 import ItemModal from "@/components/admin/item-modal"
 
-const BASE_URL = "https://app.flowerstalk.org/v1"
+const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
 
 interface Item {
   _id: string

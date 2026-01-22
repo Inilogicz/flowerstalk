@@ -23,7 +23,7 @@ export default function FeaturedCollections() {
     const fetchCollections = async () => {
       setLoading(true)
       try {
-        const response = await fetch("https://app.flowerstalk.org/v1/items/")
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/items/`)
         if (!response.ok) {
           throw new Error("Failed to fetch collections")
         }
@@ -67,50 +67,50 @@ export default function FeaturedCollections() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 min-h-[350px]">
           {loading
             ? Array.from({ length: 4 }).map((_, index) => (
-                <div key={index} className="bg-card rounded-2xl overflow-hidden border border-border">
-                  <Skeleton className="h-64 w-full" />
-                  <div className="p-4 space-y-4">
-                    <Skeleton className="h-5 w-3/4" />
-                    <div className="flex items-center justify-between">
-                      <Skeleton className="h-6 w-1/3" />
-                      <Skeleton className="h-9 w-24" />
-                    </div>
+              <div key={index} className="bg-card rounded-2xl overflow-hidden border border-border">
+                <Skeleton className="h-64 w-full" />
+                <div className="p-4 space-y-4">
+                  <Skeleton className="h-5 w-3/4" />
+                  <div className="flex items-center justify-between">
+                    <Skeleton className="h-6 w-1/3" />
+                    <Skeleton className="h-9 w-24" />
                   </div>
                 </div>
-              ))
+              </div>
+            ))
             : collections.map((item) => (
-                <div
-                  key={item.id}
-                  className="bg-card rounded-2xl overflow-hidden border border-border hover:shadow-lg transition group"
-                >
-                  {/* Image Container */}
-                  <div className="relative h-64 overflow-hidden bg-secondary">
-                    <Image
-                      src={item.image || "/placeholder.svg"}
-                      alt={item.name}
-                      fill
-                      className="object-cover group-hover:scale-110 transition duration-300"
-                    />
-                  </div>
+              <div
+                key={item.id}
+                className="bg-card rounded-2xl overflow-hidden border border-border hover:shadow-lg transition group"
+              >
+                {/* Image Container */}
+                <div className="relative h-64 overflow-hidden bg-secondary">
+                  <Image
+                    src={item.image || "/placeholder.svg"}
+                    alt={item.name}
+                    fill
+                    className="object-cover group-hover:scale-110 transition duration-300"
+                  />
+                </div>
 
-                  {/* Content */}
-                  <div className="p-4">
-                    <h3 className="font-bold text-foreground mb-2">{item.name}</h3>
-                    {item.rating && (
-                      <div className="flex items-center gap-2 mb-4">
-                        <div className="flex text-yellow-400 text-sm">{"★".repeat(Math.floor(item.rating))}</div>
-                        <span className="text-xs text-muted-foreground">({item.reviews})</span>
-                      </div>
-                    )}
-                    <div className="flex items-center justify-between">
-                      <p className="text-lg font-bold text-foreground">₦{item.price.toLocaleString()}</p>
-                      <Button size="sm" className="bg-rose-600 hover:bg-rose-700" onClick={() => handleAddToCart(item)}>
-                        Add to Cart
-                      </Button>
+                {/* Content */}
+                <div className="p-4">
+                  <h3 className="font-bold text-foreground mb-2">{item.name}</h3>
+                  {item.rating && (
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="flex text-yellow-400 text-sm">{"★".repeat(Math.floor(item.rating))}</div>
+                      <span className="text-xs text-muted-foreground">({item.reviews})</span>
                     </div>
+                  )}
+                  <div className="flex items-center justify-between">
+                    <p className="text-lg font-bold text-foreground">₦{item.price.toLocaleString()}</p>
+                    <Button size="sm" className="bg-rose-600 hover:bg-rose-700" onClick={() => handleAddToCart(item)}>
+                      Add to Cart
+                    </Button>
                   </div>
                 </div>
-              ))}
+              </div>
+            ))}
         </div>
       </div>
     </section>

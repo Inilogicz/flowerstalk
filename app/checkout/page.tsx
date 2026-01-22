@@ -48,7 +48,7 @@ export default function Checkout() {
       try {
         setLocationsLoading(true)
         // NOTE: In a real app, you might want to proxy this API call
-        const response = await fetch("https://app.flowerstalk.org/v1/locations")
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/locations`)
         if (!response.ok) {
           throw new Error("Failed to fetch locations")
         }
@@ -91,13 +91,13 @@ export default function Checkout() {
   // --- Derived State (useMemo for optimization) ---
   const deliveryLocations = useMemo(() => locations.filter((loc) => loc.type !== "pickup"), [locations])
 
-  const selectedDeliveryLocation = useMemo(() => 
-    deliveryLocations.find((loc) => loc.location === formData.city), 
+  const selectedDeliveryLocation = useMemo(() =>
+    deliveryLocations.find((loc) => loc.location === formData.city),
     [deliveryLocations, formData.city]
   )
-  
+
   const deliveryFee = selectedDeliveryLocation?.amount || 0
-  
+
   const totalWithDelivery = subtotal + tax + (deliveryMethod === "door-delivery" ? deliveryFee : 0)
 
   // --- Handlers & Validation ---
@@ -119,7 +119,7 @@ export default function Checkout() {
       toast({ variant: "destructive", title: "Please enter a valid email address." });
       return false;
     }
-    
+
     // Conditional validation for Door Delivery
     if (deliveryMethod === "door-delivery") {
       if (!address || !city || !deliveryNotes) {
@@ -165,7 +165,7 @@ export default function Checkout() {
 
     // Step 2: Submission and Payment Redirection
     setIsSubmitting(true)
-  
+
     // Validate cart is not empty (redundant but good safety check)
     if (cartItems.length === 0) {
       toast({
@@ -210,22 +210,22 @@ export default function Checkout() {
         },
       }),
     }
-  
+
     try {
-      const response = await fetch("https://app.flowerstalk.org/v1/orders/create", {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/orders/create`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(orderPayload),
       })
-  
+
       const result = await response.json()
-  
+
       if (!response.ok || !result.status) {
         // Log detailed error from API if available
         console.error("API Error creating order:", result);
         throw new Error(result.message || "Failed to create order.");
       }
-  
+
       if (result.paymentLink) {
         // Successful order creation, redirect to payment
         if (result.order && result.order.orderNumber) {
@@ -246,7 +246,7 @@ export default function Checkout() {
       setIsSubmitting(false)
     }
   }
-  
+
   // --- Rendered Component ---
   return (
     <main className="flex flex-col w-full min-h-screen">
@@ -271,17 +271,15 @@ export default function Checkout() {
             {[1, 2].map((s) => (
               <div key={s} className="flex items-center flex-1">
                 <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${
-                    s <= step ? "bg-rose-600 text-white" : "bg-secondary text-muted-foreground"
-                  }`}
+                  className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${s <= step ? "bg-rose-600 text-white" : "bg-secondary text-muted-foreground"
+                    }`}
                 >
                   {s}
                 </div>
                 {s < 2 && (
                   <div
-                    className={`flex-1 h-1 ${
-                      s < step ? "bg-rose-600" : "bg-secondary"
-                    } transition-colors duration-300`}
+                    className={`flex-1 h-1 ${s < step ? "bg-rose-600" : "bg-secondary"
+                      } transition-colors duration-300`}
                   />
                 )}
               </div>
@@ -293,7 +291,7 @@ export default function Checkout() {
               {step === 1 && (
                 <div className="space-y-8">
                   <h2 className="text-2xl font-bold text-foreground">Personal & Delivery Details</h2>
-                  
+
                   {/* Personal Info Block */}
                   <div className="space-y-6">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -337,7 +335,7 @@ export default function Checkout() {
                       className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-rose-600"
                     />
                   </div>
-                  
+
                   {/* Delivery Method Selection */}
                   <div className="space-y-4 pt-8 border-t border-border">
                     <label
@@ -383,74 +381,74 @@ export default function Checkout() {
                     </label>
                   </div>
 
-                    {/* Conditional Delivery Details Block */}
-                    {deliveryMethod === "door-delivery" && (
-                      <div className="space-y-4 bg-secondary/50 p-6 rounded-lg transition-all duration-300">
-                        <h3 className="font-semibold text-foreground mb-4">Door Delivery Information</h3>
-                        <input
-                          type="text"
-                          name="address"
-                          placeholder="Street Address"
-                          value={formData.address}
-                          onChange={handleInputChange}
-                          required={deliveryMethod === "door-delivery"}
-                          className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-rose-600"
-                        />
+                  {/* Conditional Delivery Details Block */}
+                  {deliveryMethod === "door-delivery" && (
+                    <div className="space-y-4 bg-secondary/50 p-6 rounded-lg transition-all duration-300">
+                      <h3 className="font-semibold text-foreground mb-4">Door Delivery Information</h3>
+                      <input
+                        type="text"
+                        name="address"
+                        placeholder="Street Address"
+                        value={formData.address}
+                        onChange={handleInputChange}
+                        required={deliveryMethod === "door-delivery"}
+                        className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-rose-600"
+                      />
 
-                        <div className="grid grid-cols-1 gap-4">
-                          {locationsLoading ? (
-                            <Skeleton className="h-[50px] w-full rounded-lg" />
-                          ) : (
-                            <select
-                              name="city"
-                              value={formData.city}
-                              onChange={handleInputChange} // This is the location dropdown
-                              required={deliveryMethod === "door-delivery"}
-                              className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-rose-600"
-                            >
-                              <option value="">Select City (Required)</option>
-                              {deliveryLocations.map((loc) => (
-                                <option key={loc._id} value={loc.location} >
-                                  {loc.location} (₦{(loc.amount ?? 0).toLocaleString()})
-                                </option>
-                              ))}
-                            </select>
-                          )}
-                        </div>
-
-                        <textarea
-                          name="deliveryNotes"
-                          placeholder="Delivery notes - e.g., Gate code, building details"
-                          value={formData.deliveryNotes}
-                          required={deliveryMethod === "door-delivery"}
-                          onChange={handleInputChange}
-                          rows={3}
-                          className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-rose-600"
-                        />
+                      <div className="grid grid-cols-1 gap-4">
+                        {locationsLoading ? (
+                          <Skeleton className="h-[50px] w-full rounded-lg" />
+                        ) : (
+                          <select
+                            name="city"
+                            value={formData.city}
+                            onChange={handleInputChange} // This is the location dropdown
+                            required={deliveryMethod === "door-delivery"}
+                            className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-rose-600"
+                          >
+                            <option value="">Select City (Required)</option>
+                            {deliveryLocations.map((loc) => (
+                              <option key={loc._id} value={loc.location} >
+                                {loc.location} (₦{(loc.amount ?? 0).toLocaleString()})
+                              </option>
+                            ))}
+                          </select>
+                        )}
                       </div>
-                    )}
 
-                    {/* Conditional Pickup Details Block */}
-                    {deliveryMethod === "pickup" && (
-                      <div className="space-y-4 bg-secondary/50 p-6 rounded-lg transition-all duration-300">
-                        <h3 className="font-semibold text-foreground">Store Pickup Information</h3>
-                        <p className="text-sm text-muted-foreground">
-                          {locationsLoading ? (
-                            <Skeleton className="h-5 w-3/4" /> // Keep skeleton for layout consistency
-                          ) : (
-                            `Available for pickup at: ${STORE_PICKUP_DETAILS.address}`
-                          )}
-                        </p>
-                        <textarea
-                          name="notes"
-                          placeholder="Special notes (optional) - e.g., preferred pickup time, proxy pickup"
-                          value={formData.notes}
-                          onChange={handleInputChange}
-                          rows={3}
-                          className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-rose-600"
-                        />
-                      </div>
-                    )}
+                      <textarea
+                        name="deliveryNotes"
+                        placeholder="Delivery notes - e.g., Gate code, building details"
+                        value={formData.deliveryNotes}
+                        required={deliveryMethod === "door-delivery"}
+                        onChange={handleInputChange}
+                        rows={3}
+                        className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-rose-600"
+                      />
+                    </div>
+                  )}
+
+                  {/* Conditional Pickup Details Block */}
+                  {deliveryMethod === "pickup" && (
+                    <div className="space-y-4 bg-secondary/50 p-6 rounded-lg transition-all duration-300">
+                      <h3 className="font-semibold text-foreground">Store Pickup Information</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {locationsLoading ? (
+                          <Skeleton className="h-5 w-3/4" /> // Keep skeleton for layout consistency
+                        ) : (
+                          `Available for pickup at: ${STORE_PICKUP_DETAILS.address}`
+                        )}
+                      </p>
+                      <textarea
+                        name="notes"
+                        placeholder="Special notes (optional) - e.g., preferred pickup time, proxy pickup"
+                        value={formData.notes}
+                        onChange={handleInputChange}
+                        rows={3}
+                        className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-rose-600"
+                      />
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -465,7 +463,7 @@ export default function Checkout() {
                   <div className="bg-rose-50 border border-rose-200 rounded-lg p-4">
                     <p className="text-sm font-medium text-rose-700">Your payment will be processed securely by Paystack.</p>
                   </div>
-                
+
                   <div className="mt-8 space-y-6">
                     {/* Order Items Summary */}
                     <div className="bg-secondary/50 rounded-lg p-6 space-y-4">
@@ -560,7 +558,7 @@ export default function Checkout() {
                     className="flex-1 bg-transparent border-rose-600 text-rose-600 hover:bg-rose-50"
                     onClick={() => setStep(step - 1)}
                     disabled={isSubmitting}
-                  > 
+                  >
                     Back to Details
                   </Button>
                 )}

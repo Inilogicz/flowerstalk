@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card"
 import LocationsTableSkeleton from "@/components/admin/locations-table-skeleton"
 import LocationModal from "@/components/admin/location-modal"
 
-const BASE_URL = "https://app.flowerstalk.org/v1"
+const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
 
 interface Location {
   _id: string

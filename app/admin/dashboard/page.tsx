@@ -9,7 +9,7 @@ import DashboardSkeleton from "@/components/admin/dashboard-skeleton"
 import OrderDetailsModal from "@/components/admin/order-details-modal"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts"
 
-const BASE_URL = "https://app.flowerstalk.org/v1"
+const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
 
 interface DashboardTotals {
   totalRiders: number

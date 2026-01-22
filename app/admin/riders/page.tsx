@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card"
 import RidersTableSkeleton from "@/components/admin/riders-table-skeleton"
 import RiderDetailsModal from "@/components/admin/rider-details-modal"
 
-const BASE_URL = "https://app.flowerstalk.org/v1"
+const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
 
 interface Rider {
   _id: string

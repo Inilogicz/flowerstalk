@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card"
 import ItemsTableSkeleton from "@/components/admin/items-table-skeleton"
 import ItemModal from "@/components/admin/item-modal"
 
-const BASE_URL = "https://app.flowerstalk.org/v1"
+const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
 
 interface Item {
   _id: string
@@ -147,9 +147,8 @@ export default function ItemsPage() {
                   <td className="hidden sm:table-cell px-6 py-4 text-gray-700">₦{item.price.toLocaleString()}</td>
                   <td className="hidden md:table-cell px-6 py-4">
                     <span
-                      className={`px-3 py-1 rounded-full text-sm font-medium ${
-                        item.stock > 0 ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
-                      }`}
+                      className={`px-3 py-1 rounded-full text-sm font-medium ${item.stock > 0 ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
+                        }`}
                     >
                       {item.stock} units
                     </span>

@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card"
 import OrdersTableSkeleton from "@/components/admin/orders-table-skeleton" // Assuming this exists
 import OrderDetailsModal from "@/components/admin/order-details-modal" // Corrected import
 
-const BASE_URL = "https://app.flowerstalk.org/v1"
+const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
 
 interface Order {
   _id: string

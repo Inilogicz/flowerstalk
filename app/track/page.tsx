@@ -57,7 +57,7 @@ const getStatusLabel = (status: string) => {
 
 const getStatusSteps = (currentStatus: string, deliveryMethod: string) => {
   const isPickup = deliveryMethod === "pickup"
-  
+
   // Map statuses to numeric levels for progress tracking
   const statusLevels: Record<string, number> = {
     pending: 0,
@@ -116,14 +116,14 @@ export default function TrackOrder() {
     setShowDetails(false)
 
     try {
-      const response = await fetch(`https://app.flowerstalk.org/v1/orders/order-number/${trackingId.trim()}`)
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/orders/order-number/${trackingId.trim()}`)
       const result = await response.json()
 
       if (result.status && result.data) {
         const apiData = result.data
         const isPickup = apiData.deliveryType === "pickup"
         const contactData = isPickup ? apiData.pickupData : apiData.deliveryData
-        
+
         // Helper to extract names safely
         const fullName = contactData?.fullname || contactData?.senderName || "Guest User"
         const nameParts = fullName.split(" ")
@@ -241,9 +241,8 @@ export default function TrackOrder() {
                         {/* Timeline dot and line */}
                         <div className="flex flex-col items-center">
                           <div
-                            className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                              step.isCompleted ? "bg-rose-600 text-white" : "bg-gray-200 text-gray-400"
-                            }`}
+                            className={`w-12 h-12 rounded-full flex items-center justify-center ${step.isCompleted ? "bg-rose-600 text-white" : "bg-gray-200 text-gray-400"
+                              }`}
                           >
                             <Icon className="w-6 h-6" />
                           </div>
@@ -255,9 +254,8 @@ export default function TrackOrder() {
                         {/* Timeline content */}
                         <div className="flex-1 pt-2">
                           <p
-                            className={`font-semibold ${
-                              step.isCompleted ? "text-foreground" : "text-muted-foreground"
-                            }`}
+                            className={`font-semibold ${step.isCompleted ? "text-foreground" : "text-muted-foreground"
+                              }`}
                           >
                             {step.label}
                           </p>
@@ -332,11 +330,10 @@ export default function TrackOrder() {
                       </div>
                       <div>
                         <p className="text-sm text-muted-foreground mb-1">Payment Status</p>
-                        <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          order.paymentStatus === 'paid' 
-                            ? 'bg-green-100 text-green-800' 
+                        <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${order.paymentStatus === 'paid'
+                            ? 'bg-green-100 text-green-800'
                             : 'bg-yellow-100 text-yellow-800'
-                        }`}>
+                          }`}>
                           {order.paymentStatus === 'paid' ? 'Paid' : 'Pending'}
                         </div>
                       </div>
