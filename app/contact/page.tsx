@@ -2,6 +2,7 @@ import Header from "@/components/header"
 import Footer from "@/components/footer"
 import { Button } from "@/components/ui/button"
 import { Phone, Mail, MapPin } from "lucide-react"
+import { STORE_ADDRESS } from "@/lib/store-location"
 
 export default function Contact() {
   return (
@@ -35,7 +36,7 @@ export default function Contact() {
               {
                 icon: MapPin,
                 title: "Visit Us",
-                details: "123 Flower Street\nNew York, NY 10001",
+                details: `${STORE_ADDRESS.line1}\n${STORE_ADDRESS.line2}`,
               },
             ].map((item, idx) => {
               const Icon = item.icon

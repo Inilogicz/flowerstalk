@@ -4,6 +4,7 @@ import TrustStats from "@/components/trust-stats"
 import HowItWorks from "@/components/how-it-works"
 import FeaturedCollections from "@/components/featured-collections"
 import Footer from "@/components/footer"
+import NewAddressModal from "@/components/new-address-modal"
 
 export default function Home() {
   return (
@@ -14,6 +15,7 @@ export default function Home() {
       <HowItWorks />
       <FeaturedCollections />
       <Footer />
+      <NewAddressModal />
 
     </main>
   )

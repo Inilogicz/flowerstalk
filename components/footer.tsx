@@ -1,3 +1,4 @@
+import { STORE_ADDRESS } from "@/lib/store-location"
 import Link from "next/link"
 import { Heart } from "lucide-react"
 
@@ -80,7 +81,7 @@ export default function Footer() {
             <ul className="space-y-2 text-sm">
               <li className="text-white/70">📞 0817921852</li>
               <li className="text-white/70">📧 hello@flowerstalk.com</li>
-              <li className="text-white/70">📍2 Oyinkan Abayomi Drive, Ikoyi Lagos</li>
+              <li className="text-white/70">📍{STORE_ADDRESS.full}</li>
             </ul>
           </div>
         </div>

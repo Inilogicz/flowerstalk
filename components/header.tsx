@@ -5,12 +5,15 @@ import Link from "next/link"
 import { Search, ShoppingCart, Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useCart } from "@/lib/cart-context"
+import NewAddressBar from "@/components/new-address-bar"
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const { cartCount } = useCart()
 
   return (
+    <>
+    <NewAddressBar />
     <header className="w-full bg-background border-b border-border sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
@@ -95,5 +98,6 @@ export default function Header() {
         )}
       </div>
     </header>
+    </>
   )
 }
